@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Calculator</title>
+    <style>
+        /* CSS Styling */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .calculator {
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            background-color: #333;
+            width: 300px;
+        }
+
+        #display {
+            width: 95%;
+            height: 50px;
+            margin-bottom: 20px;
+            padding: 10px;
+            font-size: 2em;
+            text-align: right;
+            border: none;
+            border-radius: 5px;
+            background-color: #fff;
+            box-sizing: border-box; /* Include padding in the element's total width and height */
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.1s;
+            background-color: #555;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #777;
+        }
+
+        .operator {
+            background-color: orange;
+        }
+
+        .operator:hover {
+            background-color: #ff9900;
+        }
+
+        .clear {
+            background-color: #d9534f; /* Red-ish */
+        }
+
+        .clear:hover {
+            background-color: #c9302c;
+        }
+
+        .equals {
+            grid-column: span 2;
+            background-color: #5cb85c; /* Green-ish */
+        }
+
+        .equals:hover {
+            background-color: #4cae4c;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <input type="text" id="display" disabled>
+        <div class="buttons">
+            <button class="clear">C</button>
+            <button class="operator">^</button> <button class="operator">%</button>
+            <button class="operator">/</button>
+
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button class="operator">*</button>
+
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button class="operator">-</button>
+
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button class="operator">+</button>
+
+            <button>0</button>
+            <button>.</button>
+            <button class="equals">=</button>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript Logic
+        const display = document.getElementById('display');
+        const buttons = document.querySelectorAll('.buttons button');
+
+        let currentInput = '0';
+        let operator = null;
+        let previousInput = null;
+        let isAwaitingNewInput = true;
+
+        // Function to update the display
+        function updateDisplay() {
+            display.value = currentInput;
+        }
+
+        // Handle button clicks
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const value = button.textContent;
+
+                if (button.classList.contains('clear')) {
+                    // C (Clear) button
+                    currentInput = '0';
+                    operator = null;
+                    previousInput = null;
+                    isAwaitingNewInput = true;
+                } else if (button.classList.contains('equals')) {
+                    // = (Equals) button
+                    if (operator && previousInput !== null) {
+                        currentInput = String(calculate(previousInput, operator, currentInput));
+                        operator = null;
+                        previousInput = null;
+                        isAwaitingNewInput = true; // Ready for a new operation
+                    }
+                } else if (button.classList.contains('operator')) {
+                    // Operator buttons (+, -, *, /, %, ^)
+                    if (previousInput === null) {
+                        previousInput = currentInput;
+                    } else if (!isAwaitingNewInput) {
+                         // Perform calculation if user chaining operations
+                        previousInput = String(calculate(previousInput, operator, currentInput));
+                    }
+                    
+                    operator = value;
+                    isAwaitingNewInput = true;
+                    // Update display to show result of chained operation, or just current input if first operation
+                    currentInput = previousInput; 
+
+                } else {
+                    // Number and Decimal buttons (0-9, .)
+                    if (isAwaitingNewInput) {
+                        currentInput = value === '.' ? '0.' : value;
+                        isAwaitingNewInput = false;
+                    } else {
+                        if (value === '.' && currentInput.includes('.')) {
+                            return; // Prevent multiple decimals
+                        }
+                        // Replace '0' with new number unless it's a decimal
+                        if (currentInput === '0' && value !== '.') {
+                            currentInput = value;
+                        } else {
+                            currentInput += value;
+                        }
+                    }
+                }
+
+                updateDisplay();
+            });
+        });
+
+        // The core calculation logic
+        function calculate(num1, op, num2) {
+            const n1 = parseFloat(num1);
+            const n2 = parseFloat(num2);
+
+            if (isNaN(n1) || isNaN(n2)) return NaN;
+
+            switch (op) {
+                case '+':
+                    return n1 + n2;
+                case '-':
+                    return n1 - n2;
+                case '*':
+                    return n1 * n2;
+                case '/':
+                    // Handle division by zero
+                    if (n2 === 0) return 'Error: Div by 0';
+                    return n1 / n2;
+                case '%':
+                    return n1 % n2;
+                case '^':
+                    return Math.pow(n1, n2);
+                default:
+                    return n2;
+            }
+        }
+
+        // Initialize display
+        updateDisplay();
+    </script>
+
+</body>
+</html>
